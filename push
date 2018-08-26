@@ -1,0 +1,1 @@
+docker build -t gameserver-service . && docker tag gameserver-service moneygames/gameserver-service:$(git rev-parse --abbrev-ref HEAD) && docker push moneygames/gameserver-service:$(git rev-parse --abbrev-ref HEAD)
