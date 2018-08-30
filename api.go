@@ -14,6 +14,12 @@ import (
 
 var gameserverRedis *redis.Client
 
+type GameServer struct {
+	Status  string
+	Players	string
+	Pot			string
+}
+
 func main() {
 	corsObj := handlers.AllowedOrigins([]string{"*"})
 	router := mux.NewRouter()
@@ -45,5 +51,13 @@ func connectToRedis(addr string) *redis.Client {
 
 func Games(w http.ResponseWriter, r *http.Request) {
 	keys, _ := gameserverRedis.Keys("*").Result()
-	json.NewEncoder(w).Encode(keys)
+	gameServers := make(map[string]*GameServer)
+	for _, id := range keys {
+		status, _ := gameserverRedis.HGet(id, "status").Result()
+		players, _ := gameserverRedis.HGet(id, "players").Result()
+		pot, _ := gameserverRedis.HGet(id, "pot").Result()
+		gameServer := &GameServer{status, players, pot}
+		gameServers[id] = gameServer
+	}
+	json.NewEncoder(w).Encode(gameServers)
 }
