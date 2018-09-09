@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-redis/redis"
@@ -16,8 +17,8 @@ var gameserverRedis *redis.Client
 
 type GameServer struct {
 	Status  string
-	Players	string
-	Pot			string
+	Players string
+	Pot     string
 }
 
 func main() {
@@ -53,11 +54,14 @@ func Games(w http.ResponseWriter, r *http.Request) {
 	keys, _ := gameserverRedis.Keys("*").Result()
 	gameServers := make(map[string]*GameServer)
 	for _, id := range keys {
-		status, _ := gameserverRedis.HGet(id, "status").Result()
 		players, _ := gameserverRedis.HGet(id, "players").Result()
-		pot, _ := gameserverRedis.HGet(id, "pot").Result()
-		gameServer := &GameServer{status, players, pot}
-		gameServers[id] = gameServer
+		numPlayers, _ := strconv.Atoi(players)
+		if numPlayers > 1 {
+			status, _ := gameserverRedis.HGet(id, "status").Result()
+			pot, _ := gameserverRedis.HGet(id, "pot").Result()
+			gameServer := &GameServer{status, players, pot}
+			gameServers[id] = gameServer
+		}
 	}
 	json.NewEncoder(w).Encode(gameServers)
 }
